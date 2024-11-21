@@ -5,7 +5,9 @@ export default class Shader {
     gl.compileShader(shader);
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
       var info = gl.getShaderInfoLog(shader);
-      console.log('Could not compile WebGL program:' + info);
+      console.log('Could not compile WebGL shader:' + info);
+      gl.deleteShader(shader);
+      return null;
     }
 
     return shader;
@@ -19,7 +21,9 @@ export default class Shader {
     gl.linkProgram(program);
     if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
       var info = gl.getProgramInfoLog(program);
-      console.log('Could not compile WebGL program:' + info);
+      console.log('Could not link WebGL program:' + info);
+      gl.deleteProgram(program);
+      return null;
     }
 
     return program;
@@ -38,7 +42,7 @@ export default class Shader {
       return null;
     }
 
-    var buffer = gl.createBuffer();
+    const buffer = gl.createBuffer();
     gl.bindBuffer(type, buffer);
     gl.bufferData(type, data, gl.STATIC_DRAW);
 
