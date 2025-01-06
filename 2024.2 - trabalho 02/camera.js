@@ -1,10 +1,11 @@
 export default class Camera {
   
   // usei o construtor para inserir as coordenadas da câmera
-  constructor(gl, eye1, eye2, eye3, at1, at2, at3, up1, up2, up3) {   // Posição da camera
-    this.eye = vec3.fromValues(eye1, eye2, eye3);
-    this.at  = vec3.fromValues(at1, at2, at3);
-    this.up  = vec3.fromValues(up1, up2, up3);
+  constructor(gl, eye1, eye2, eye3, at1, at2, at3, up1, up2, up3) {  
+    // Posição da camera
+    this.eye = vec3.fromValues(eye1, eye2, eye3); 
+    this.at  = vec3.fromValues(at1, at2, at3); // Para onde a câmera está olhando
+    this.up  = vec3.fromValues(up1, up2, up3); // Direção "para cima" da câmera
 
     // Parâmetros da projeção
     this.fovy = Math.PI / 2; // 90 graus
@@ -46,9 +47,18 @@ export default class Camera {
     }
   }
 
-  updateCam() {
+  orbit(radius, speed, time) {
+    const angle = speed * time; // Calcula o ângulo de rotação baseado no tempo
+    const x = radius * Math.cos(angle); // Posição X
+    const z = radius * Math.sin(angle); // Posição Z
+    this.eye = vec3.fromValues(x, this.eye[1], z); // Atualiza a posição mantendo Y constante
+    this.updateViewMatrix(); // Atualiza a matriz de visão
+  }
+  
+
+  updateCam(type = '') {
     this.updateViewMatrix(); // Atualiza a matriz view
-    this.updateProjectionMatrix(); // Atualiza a matriz projection
+    this.updateProjectionMatrix(type); // Atualiza a matriz projection
   }
 }
 
