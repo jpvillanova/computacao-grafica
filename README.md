@@ -1,4 +1,4 @@
-<!-- 
+
 ####################################################################################################
 
 1) A aplicação deve mostrar uma cena composta por um modelo 3D (veja o link abaixo). O sistema
@@ -35,5 +35,5 @@ fazendo -> criar e possicionar as cameras 1 e 2 {ainda sem os parametros que sã
 deve-se calcular os triângulos que compõem as orelhas do Bunny e colori-los de vermelho. 
 
 #################################################################################################### 
--->
+
 
