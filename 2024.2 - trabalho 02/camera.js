@@ -1,9 +1,10 @@
 export default class Camera {
-  constructor(gl) {
-    // Posição da camera
-    this.eye = vec3.fromValues(1.0, 1.0, 1.0);
-    this.at  = vec3.fromValues(0.0, 0.0, 0.0);
-    this.up  = vec3.fromValues(0.0, 1.0, 0.0);
+  
+  // usei o construtor para inserir as coordenadas da câmera
+  constructor(gl, eye1, eye2, eye3, at1, at2, at3, up1, up2, up3) {   // Posição da camera
+    this.eye = vec3.fromValues(eye1, eye2, eye3);
+    this.at  = vec3.fromValues(at1, at2, at3);
+    this.up  = vec3.fromValues(up1, up2, up3);
 
     // Parâmetros da projeção
     this.fovy = Math.PI / 2; // 90 graus
