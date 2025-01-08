@@ -16,15 +16,12 @@ perspectiva e orbitar em torno da cena. A segunda câmera deve utilizar projeç�
 observar a origem da cena da posição (50, 50, 50). A alternância das cenas deve ser feita de forma
 interativa através de um botão definido na interface.
 
-===============================================================================================================
 fazendo -> a projeção das cameras. {quase pronto, apenas os parametros que ainda não entendi}
 fazendo -> uma função para orbit da camera. {função pronta, mais ainda não testei}
 fazendo -> arrumando a função draw para usar a função orbit. {função implementada mais com os parametros para decidir}
 concuido -> definir as projeções das cameras 1 e 2 {ainda sem teste}
 começar -> criar a função que faça a aternancia das cenas.
 fazendo -> criar e possicionar as cameras 1 e 2 {ainda sem os parametros que são opcionais a decidir}
-===============================================================================================================
-
 
 ####################################################################################################
 
