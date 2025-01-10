@@ -40,7 +40,7 @@ export default class Mesh {
   }
 
   async loadMeshV4() { // carrega a malha
-    const resp = await fetch('model.obj'); // carrega o arquivo
+    const resp = await fetch('bunny.obj'); // carrega o arquivo
     const text = await resp.text(); // pega o texto
 
     const txtList = text.split(/\s+/)

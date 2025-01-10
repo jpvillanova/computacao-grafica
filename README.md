@@ -4,9 +4,13 @@
 de coordenadas da cena deve considerar que as coordenadas variam entre -100 e 100.
 Bunny: https://www.prinmath.com/csci5229/OBJ/bunny.zip
 
+a fazer -> definir as coordenadas da cena varia entre 100 e -100 {creio que seja para nao usar parametros maiores que 100 e menores que -100}
+
 ####################################################################################################
 
 2) O modelo deve ter altura 50, e seu centro de massa deve estar posicionado na origem.
+
+a fazer -> definir a altura do modelo {creio que seja atravez das matrizes que usamos no trabalho 1}
 
 ####################################################################################################
 
@@ -19,14 +23,15 @@ fazendo -> a projeção das cameras. {quase pronto, apenas os parametros que ain
 fazendo -> uma função para orbit da camera. {função pronta, mais ainda não testei}
 fazendo -> arrumando a função draw para usar a função orbit. {função implementada mais com os parametros para decidir}
 concuido -> definir as projeções das cameras 1 e 2 {ainda sem teste}
-começar -> criar a função que faça a aternancia das cenas.
-fazendo -> criar e possicionar as cameras 1 e 2 {ainda sem os parametros que são opcionais a decidir}
+a fazer -> criar a função que faça a aternancia das cenas.
+fazendo -> criar e possicionar as cameras 1 e 2 {ainda sem os parametros que são opcionais. decidir com testes}
 
 ####################################################################################################
 
 4) A cena deve conter duas fontes de luz (uma branca e outra amarela) posicionadas em (-100, 100, 0) e (100, 100, 0). O modelo de phong deve ser implementado no shader de fragmentos.
 
 fazendo -> configurar as propriedades das luzes no construtor da classe {configurar a função updateLigth para manter os parametros}
+a fazer -> fazer o modelo de phong no shader de fragmentos
 
 ####################################################################################################
 
