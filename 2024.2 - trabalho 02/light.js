@@ -1,8 +1,8 @@
 export default class Light {
-  constructor() {
-    this.pos = vec4.fromValues(2.0, 2.0, 2.0, 1.0); // light position
+  constructor(posX, posY, posZ, amb_c_R, amb_c_G, amb_c_B) {
+    this.pos = vec4.fromValues(posX, posY, posZ, 1.0); // light position
 
-    this.amb_c = vec4.fromValues(1.0, 1.0, 1.0, 1.0); // ambient color
+    this.amb_c = vec4.fromValues(amb_c_R, amb_c_G, amb_c_B, 1.0); // ambient color
     this.amb_k = 0.2;
 
     this.dif_c = vec4.fromValues(1.0, 1.0, 1.0, 1.0); // diffuse color

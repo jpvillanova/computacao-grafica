@@ -4,12 +4,13 @@ import Mesh from './mesh.js';
 
 class Scene {
   constructor(gl) {
-    // Camera virtual
-    this.cam1 = new Camera(gl, [50, 50, 50], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
+    // Camera virtual                         
+    this.cam1 = new Camera(gl, [50, 50, 50], [/* 0.0, 0.0, 0.0 */]/*  a definir as coordenadas*/, [0.0, 1.0, 0.0]);
     this.cam2 = new Camera(gl, [100, 100, 100], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
-    // Luz
     
-    this.light = new Light();
+    // Luz
+    this.light1 = new Light(-100, 100, 0, 1.0, 1.0, 1.0); // luz branca
+    this.light2 = new Light(100, 100, 0, 1.0, 1.0, 0.0); // luz amarela
 
     // Mesh
     this.mesh = new Mesh( 1.0); // cria uma nova malha
@@ -33,8 +34,10 @@ class Scene {
     this.cam1.updateCam('perspectiva'); // atualiza a câmera 1
     this.cam2.updateCam('ortho'); // atualiza a câmera 2
     
-    this.light.updateLight(); // atualiza a luz
-
+    this.light1.updateLight(); // atualiza a luz branca
+    this.light2.updateLight(); // atualiza a luz amarela
+    
+    // colocar aq a função de troca de câmera !!!
     this.mesh.draw(gl, this.cam, this.light); // desenha a malha
     this.copy.draw(gl, this.cam, this.light); // desenha a malha
   }
