@@ -5,7 +5,7 @@ import Mesh from './mesh.js';
 class Scene {
   constructor(gl) {
     // Camera virtual                         
-    this.cam1 = new Camera(gl, [50, 50, 50], [/* 0.0, 0.0, 0.0 */]/*  a definir as coordenadas*/, [0.0, 1.0, 0.0]);
+    this.cam1 = new Camera(gl, [50, 50, 50], [0.0, 0.0, 0.0]/*  a definir as coordenadas*/, [0.0, 1.0, 0.0]);
     this.cam2 = new Camera(gl, [100, 100, 100], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
     
     // Luz
@@ -19,10 +19,10 @@ class Scene {
 
   async init(gl) { // inicializa a cena
     await this.mesh.loadMeshV4(); // carrega a malha
-    this.mesh.init(gl, this.light); // inicializa a malha
+    this.mesh.init(gl, this.light); // inicializa a malha, colocar a as duas luzes depois !!!
 
     await this.copy.loadMeshV4() // carrega a malha
-    this.copy.init(gl, this.light); // inicializa a malha
+    this.copy.init(gl, this.light); // inicializa a malha, colocar a as duas luzes depois !!!
   }
 
   draw(gl) {  // desenha a cena
@@ -38,8 +38,8 @@ class Scene {
     this.light2.updateLight(); // atualiza a luz amarela
     
     // colocar aq a função de troca de câmera !!!
-    this.mesh.draw(gl, this.cam, this.light); // desenha a malha
-    this.copy.draw(gl, this.cam, this.light); // desenha a malha
+    this.mesh.draw(gl, this.cam, this.light); // desenha a malha, colocar a as duas luzes depois !!!
+    this.copy.draw(gl, this.cam, this.light); // desenha a malha, colocar a as duas luzes depois !!!
   }
 }
 
