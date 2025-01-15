@@ -2,65 +2,23 @@ export default
 `#version 300 es
 precision highp float;
 
-uniform vec4 light_pos;
-
-uniform vec4 light_amb_c;
-uniform float light_amb_k;
-
-uniform vec4 light_dif_c;
-uniform float light_dif_k;
-
-uniform vec4 light_esp_c;
-uniform float light_esp_k;
-uniform float light_esp_p;
-
-uniform mat4 u_model;
-uniform mat4 u_view;
-uniform mat4 u_projection;
-
 uniform sampler2D uColorMap;
 
-in vec4 fPosition;
-in vec4 fNormal;
-in float fScalar;
+in vec3 v_normal;
+in vec2 v_texCoord;
 
-out vec4 minhaColor;
+out vec4 fragColor;
 
-void main()
-{
-  mat4 modelView = u_view * u_model;
+void main() {
+    vec3 lightDir = normalize(vec3(0.0, 1.0, 1.0));
+    vec3 norm = normalize(v_normal);
 
-  // posição do vértice no sistema da câmera
-  vec4 viewPosition = modelView * fPosition;
+    float diff = max(dot(norm, lightDir), 0.0);
+    vec4 texColor = texture(uColorMap, v_texCoord);
 
-  // posição final do vertice  
-  // normal do vértice no sistema da câmera
-  vec4 viewNormal = transpose(inverse(modelView)) * fNormal;
-  viewNormal = normalize(viewNormal);
-
-  // posição da luz no sistema da câmera
-  vec4 viewLightPos = u_view * light_pos;
-
-  // direção da luz
-  vec4 lightDir = normalize(viewLightPos - viewPosition);
-
-  // direção da camera (camera está na origem)
-  vec4 cameraDir = normalize(-viewPosition);
-
-  // fator da componente difusa
-  float fatorDif = max(0.0, dot(lightDir, viewNormal));
-
-  // fator da componente especular
-  vec4 halfVec = normalize(lightDir + cameraDir);
-  float fatorEsp = pow(max(0.0, dot(halfVec, viewNormal)), light_esp_p);
-
-  // acesso a textura
-  vec2 texCoords = vec2(fScalar, 0);
-  vec4 fColor = texture(uColorMap, texCoords);
-
-  // cor final do vértice
-  minhaColor = 0.45 * fColor + 0.55 * (light_amb_k * light_amb_c + fatorDif * light_dif_k * light_dif_c + fatorEsp * light_esp_k * light_esp_c);
-}`
+    fragColor = vec4(diff * texColor.rgb, 1.0);
+}
+`
 /*
 Uniformes:
 

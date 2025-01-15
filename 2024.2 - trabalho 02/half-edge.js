@@ -42,38 +42,58 @@ export class HalfEdgeDS {
   }
 
   build(coords, trigs) {
-    // construção dos vértices
-    for (let vid = 0; vid < coords.length; vid+=4) {
-      const x = coords[vid]; 
-      const y = coords[vid + 1]; 
-      const z = coords[vid + 2];
-
-      const v = new Vertex(vid / 4, x, y, z); // cria um novo vértice
-      this.vertices.push(v); // adiciona o vértice na lista de vértices
+    // Clear any existing data
+    this.vertices = [];
+    this.halfEdges = [];
+    this.faces = [];
+  
+    // Build vertices - Notice the coords loop must be fixed to match vertex count
+    const vertexCount = coords.length / 4; // Since each vertex has 4 components (x,y,z,w)
+    for (let i = 0; i < vertexCount; i++) {
+      const baseIndex = i * 4;
+      const x = coords[baseIndex];
+      const y = coords[baseIndex + 1];
+      const z = coords[baseIndex + 2];
+  
+      const v = new Vertex(i, x, y, z); // Create vertex with correct ID
+      this.vertices.push(v);
     }
-
-    // construção das faces & half-edges
-    for (let tid = 0; tid < trigs.length; tid+=3) {
-      const v0  = this.vertices[ trigs[tid + 0] ]; 
-      const v1  = this.vertices[ trigs[tid + 1] ]; 
-      const v2  = this.vertices[ trigs[tid + 2] ];
-
-      const he0 = new HalfEdge(v0); 
-      const he1 = new HalfEdge(v1); 
-      const he2 = new HalfEdge(v2); 
-      const face = new Face(he0); 
-      this.faces.push(face); 
-
-      // atribuição das faces das half-edges
+  
+    // Build faces & half-edges
+    for (let i = 0; i < trigs.length; i += 3) {
+      // Verify indices are within bounds
+      if (trigs[i] >= this.vertices.length || 
+          trigs[i + 1] >= this.vertices.length || 
+          trigs[i + 2] >= this.vertices.length) {
+        console.error('Invalid vertex index in triangles array');
+        continue;
+      }
+  
+      // Get vertices for this triangle
+      const v0 = this.vertices[trigs[i]];
+      const v1 = this.vertices[trigs[i + 1]];
+      const v2 = this.vertices[trigs[i + 2]];
+  
+      // Create half-edges
+      const he0 = new HalfEdge(v0);
+      const he1 = new HalfEdge(v1);
+      const he2 = new HalfEdge(v2);
+  
+      // Create face
+      const face = new Face(he0);
+      this.faces.push(face);
+  
+      // Set face for half-edges
       he0.face = face;
       he1.face = face;
       he2.face = face;
-
-      // atribuição das next
+  
+      // Set next pointers
       he0.next = he1;
       he1.next = he2;
       he2.next = he0;
-
+  
+      // Add half-edges to array
       this.halfEdges.push(he0, he1, he2);
     }
 
@@ -107,45 +127,47 @@ export class HalfEdgeDS {
     }
   }
 
-  computeVertexHe() { // computa os half-edges dos vértices
-    for (let hid = 0; hid < this.halfEdges.length; hid ++) {
-      const v = this.halfEdges[hid].vertex; // vértice
-
-      if (v.he === null) {
-        v.he = this.halfEdges[hid]; // half-edge
-      }
-      else if(this.halfEdges[hid].opposite === null) {
-        v.he = this.halfEdges[hid]; // half-edge
+  computeVertexHe() {
+    for (let hid = 0; hid < this.halfEdges.length; hid++) {
+      const v = this.halfEdges[hid].vertex; // Current vertex
+  
+      // Assign the half-edge only if it's the first or if it is a border edge
+      if (v.he === null || this.halfEdges[hid].opposite === null) {
+        v.he = this.halfEdges[hid];
       }
     }
   }
+  
 
-  computeNormals() { // computa as normais
-    for (let fId = 0; fId < this.faces.length; fId ++) {
-      const he0 = this.faces[fId].baseHe; // half-edge
-      const he1 = this.faces[fId].baseHe.next; // half-edge
-      const he2 = this.faces[fId].baseHe.next.next; // half-edge
-
-      const v0 = he0.vertex.position;  // vértice
-      const v1 = he1.vertex.position; // vértice
-      const v2 = he2.vertex.position; // vértice
-
-      const vec1 = [v1[0]-v0[0], v1[1]-v0[1], v1[2]-v0[2]]; // v1-v0
-      const vec2 = [v2[0]-v0[0], v2[1]-v0[1], v2[2]-v0[2]]; // v2-v0
-
+  computeNormals() {
+    for (let fId = 0; fId < this.faces.length; fId++) {
+      const he0 = this.faces[fId].baseHe;
+      const he1 = he0.next;
+      const he2 = he1.next;
+  
+      if (!he0 || !he1 || !he2) continue; // Skip incomplete faces
+  
+      const v0 = he0.vertex.position;
+      const v1 = he1.vertex.position;
+      const v2 = he2.vertex.position;
+  
+      const vec1 = [v1[0] - v0[0], v1[1] - v0[1], v1[2] - v0[2]];
+      const vec2 = [v2[0] - v0[0], v2[1] - v0[1], v2[2] - v0[2]];
+  
       const n = [
         vec1[1] * vec2[2] - vec1[2] * vec2[1],
         vec1[2] * vec2[0] - vec1[0] * vec2[2],
-        vec1[0] * vec2[1] - vec1[1] * vec2[0]
-      ]; // n = vec1 x vec2
-
+        vec1[0] * vec2[1] - vec1[1] * vec2[0],
+      ];
+  
       for (let cid = 0; cid < 3; cid++) {
         he0.vertex.normal[cid] += n[cid];
         he1.vertex.normal[cid] += n[cid];
         he2.vertex.normal[cid] += n[cid];
-      } // acumula as normais
+      }
     }
   }
+  
 
   getVBOs() { // retorna os VBOs
     const coords  = [];
@@ -168,16 +190,19 @@ export class HalfEdgeDS {
     return [coords, scalars, normals, indices]; // retorna os VBOs
   }
 
-  estrela(v) { // retorna a estrela de um vértice
+  estrela(v) {
     const estrela = [];
-
-    let he = v.he; // half-edge
+  
+    let he = v.he; // Start half-edge
     do {
-      estrela.push(he.vertex.vid); // vertex id
-      he = he.opposite.next; // half-edge
-    } while (he !== v.he);
-
-    return estrela; // retorna a estrela
+      estrela.push(he.vertex.vid); // Add vertex ID
+      
+      // Move to the next half-edge
+      he = he.opposite ? he.opposite.next : null;
+  
+    } while (he && he !== v.he); // Stop at the starting edge or on border
+  
+    return estrela;
   }
 }
 

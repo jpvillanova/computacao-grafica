@@ -7,20 +7,15 @@ uniform mat4 u_view;
 uniform mat4 u_projection;
 
 in vec4 position;
-in vec4 normal;
-in float scalar;
+in vec3 normal;
+in vec2 texCoord;
 
-out vec4 fPosition;
-out vec4 fNormal;
-out float fScalar;
+out vec3 v_normal;
+out vec2 v_texCoord;
 
 void main() {
-  mat4 modelView = u_view * u_model;
-
-  // posição final do vertice
-  gl_Position  = u_projection * modelView * position;
-
-  fPosition = position;
-  fNormal = normal;
-  fScalar = scalar;
-}`
+    gl_Position = u_projection * u_view * u_model * position;
+    v_normal = mat3(transpose(inverse(u_model))) * normal; // Transform normal
+    v_texCoord = texCoord;
+}
+`

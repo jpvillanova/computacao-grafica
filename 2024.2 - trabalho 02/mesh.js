@@ -38,34 +38,49 @@ export default class Mesh {
   isReady() { // verifica se a malha está pronta
     return this.heds.isReady(); // verifica se a estrutura está pronta
   }
+  
+  async loadMeshV4() {
+    const resp = await fetch('moon.obj');
+    const text = await resp.text();
+    console.log("Loaded OBJ file:", text.substring(0, 200)); // Show first 200 chars
 
-  async loadMeshV4() { // carrega a malha
-    const resp = await fetch('model.obj'); // carrega o arquivo
-    const text = await resp.text(); // pega o texto
+    const lines = text.split('\n');
+    const coords = [];
+    const indices = [];
+    const normals = [];
 
-    const txtList = text.split(/\s+/)
-    const data = txtList.map(d => +d); // converte para número
+    for (const line of lines) {
+      const parts = line.trim().split(/\s+/);
 
-    const nv = data[0]; // número de vértices
-    const nt = data[1]; // número de triângulos
-
-    const coords = []; // coordenadas
-    const indices = []; // índices
-
-    // construção dos vértices
-    for (let did = 2; did < data.length; did++) {
-      if (did < 4 * nv + 2) {
-        coords.push(data[did]); // adiciona a coordenada
-      }
-      else {
-        indices.push(data[did]); // adiciona o índice
+      if (parts[0] === 'v') {
+        // Vertex coordinates
+        coords.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2]),
+          parseFloat(parts[3]),
+          1.0 
+        );
+      } else if (parts[0] === 'vn') {
+        // Vertex normals
+        normals.push(
+          parseFloat(parts[1]),
+          parseFloat(parts[2]),
+          parseFloat(parts[3]),
+          0.0
+        );
+      } else if (parts[0] === 'f') {
+        // Face indices
+        parts.slice(1).forEach((face) => {
+          const vertexIndex = face.split('/')[0];
+          indices.push(parseInt(vertexIndex) - 1);
+        });
       }
     }
-
-    console.log(coords, indices); // imprime as coordenadas e índices
-    this.heds.build(coords, indices); // constrói a malha
-  }
-
+  
+    // Set the data in your mesh structure
+    this.heds.build(coords, indices);
+  }  
+  
   createShader(gl) { // cria o shader
     this.vertShd = Shader.createShader(gl, gl.VERTEX_SHADER, vertShaderSrc); // cria o vertex shader
     this.fragShd = Shader.createShader(gl, gl.FRAGMENT_SHADER, fragShaderSrc); // cria o fragment shader
