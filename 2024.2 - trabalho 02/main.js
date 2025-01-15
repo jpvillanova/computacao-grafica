@@ -5,78 +5,68 @@ import Mesh from './mesh.js';
 class Scene {
   constructor(gl) {
     // Camera virtual
-    this.cam1 = new Camera(gl, [50, 50, 50], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
-    this.cam2 = new Camera(gl, [100, 100, 100], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
+    this.cam = new Camera(gl);
+
     // Luz
-    
     this.light = new Light();
 
     // Mesh
-    this.mesh = new Mesh( 1.0); // cria uma nova malha
-    this.copy = new Mesh(-1.0); // cria uma nova malha
+    this.mesh = new Mesh( 1.0);
+    this.copy = new Mesh(-1.0);
   }
 
-  async init(gl) { // inicializa a cena
-    await this.mesh.loadMeshV4(); // carrega a malha
-    this.mesh.init(gl, this.light); // inicializa a malha
+  async init(gl) {
+    await this.mesh.loadMeshV4();
+    this.mesh.init(gl, this.light);
 
-    await this.copy.loadMeshV4() // carrega a malha
-    this.copy.init(gl, this.light); // inicializa a malha
+    await this.copy.loadMeshV4()
+    this.copy.init(gl, this.light);
   }
 
-  draw(gl) {  // desenha a cena
-    // orbita das cameras
-    const time = performance.now() / 1000; // Tempo em segundos
-    this.cam1.orbit(5.0, 0.5, time); // Raio de 5 unidades, velocidade de 0.5 rad/s
-    this.cam2.orbit(5.0, 0.5, time); // Raio de 5 unidades, velocidade de 0.5 rad/s
+  draw(gl) {  
+    this.cam.updateCam();
+    this.light.updateLight();
 
-    this.cam1.updateCam('perspectiva'); // atualiza a câmera 1
-    this.cam2.updateCam('ortho'); // atualiza a câmera 2
-    
-    this.light.updateLight(); // atualiza a luz
-
-    this.mesh.draw(gl, this.cam, this.light); // desenha a malha
-    this.copy.draw(gl, this.cam, this.light); // desenha a malha
+    this.mesh.draw(gl, this.cam, this.light);
+    this.copy.draw(gl, this.cam, this.light);
   }
 }
 
-class Main { 
+class Main {
   constructor() {
-    const canvas = document.querySelector("#glcanvas"); // seleciona o canvas
+    const canvas = document.querySelector("#glcanvas");
 
-    this.gl = canvas.getContext("webgl2"); // pega o contexto do canvas
-    this.setViewport(); // seta o viewport
+    this.gl = canvas.getContext("webgl2");
+    this.setViewport();
 
-    this.scene = new Scene(this.gl); // cria uma nova cena
-    this.scene.init(this.gl); // inicializa a cena
+    this.scene = new Scene(this.gl);
+    this.scene.init(this.gl).then(() => {
+      this.draw();
+    });
   }
 
-  setViewport() { // seta o viewport
-    var devicePixelRatio = window.devicePixelRatio || 1; // pega o device pixel ratio
-    this.gl.canvas.width = 1024 * devicePixelRatio; // seta a largura do canvas
-    this.gl.canvas.height = 768 * devicePixelRatio; // seta a altura do canvas
+  setViewport() {
+    var devicePixelRatio = window.devicePixelRatio || 1;
+    this.gl.canvas.width = 1024 * devicePixelRatio;
+    this.gl.canvas.height = 768 * devicePixelRatio;
 
-    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height); // seta o viewport
+    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
   }
 
-  draw() { // desenha a cena
-    this.gl.clearColor(0.0, 0.0, 0.0, 1.0); // seta a cor de fundo
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // limpa o canvas
+  draw() {
+    this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-    // só desenha se as malhas estiverem carregadas
-    if (this.scene.mesh.isReady() && this.scene.copy.isReady() ) { 
-      this.scene.draw(this.gl); // desenha a cena
-    }
+    this.scene.draw(this.gl);
 
-    requestAnimationFrame(this.draw.bind(this)); // chama o próximo frame
+    requestAnimationFrame(this.draw.bind(this));
   }
 }
 
 window.onload = () => {
-  const app = new Main(); // cria uma nova aplicação
-  app.draw(); // desenha a aplicação
+  const app = new Main();
+  app.draw();
 }
-
 
 /* 
 Classe Scene
