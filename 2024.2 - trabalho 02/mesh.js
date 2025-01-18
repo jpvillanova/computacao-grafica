@@ -42,34 +42,34 @@ export default class Mesh {
   async loadMeshV4() {
     const resp = await fetch('bunny.obj');
     const text = await resp.text();
-    console.log("Loaded OBJ file:", text.substring(0, 200)); // Show first 200 chars
-
+    console.log("Loaded OBJ file:", text.substring(0, 200)); // Mostra os primeiros 200 caracteres
+  
     const lines = text.split('\n');
     const coords = [];
     const indices = [];
-    const normals = [];
-
+  
+    // Para calcular o centro e a altura
+    let minY = Infinity;
+    let maxY = -Infinity;
+    let centroid = [0, 0, 0];
+  
     for (const line of lines) {
       const parts = line.trim().split(/\s+/);
-
+  
       if (parts[0] === 'v') {
-        // Vertex coordinates
-        coords.push(
-          parseFloat(parts[1]),
-          parseFloat(parts[2]),
-          parseFloat(parts[3]),
-          1.0 
-        );
-      } else if (parts[0] === 'vn') {
-        // Vertex normals
-        normals.push(
-          parseFloat(parts[1]),
-          parseFloat(parts[2]),
-          parseFloat(parts[3]),
-          0.0
-        );
+        const x = parseFloat(parts[1]);
+        const y = parseFloat(parts[2]);
+        const z = parseFloat(parts[3]);
+  
+        // Atualiza o cálculo do centroide e dos limites verticais
+        centroid[0] += x;
+        centroid[1] += y;
+        centroid[2] += z;
+        minY = Math.min(minY, y);
+        maxY = Math.max(maxY, y);
+  
+        coords.push(x, y, z, 1.0);
       } else if (parts[0] === 'f') {
-        // Face indices
         parts.slice(1).forEach((face) => {
           const vertexIndex = face.split('/')[0];
           indices.push(parseInt(vertexIndex) - 1);
@@ -77,7 +77,23 @@ export default class Mesh {
       }
     }
   
-    // Set the data in your mesh structure
+    // Calcula o centroide
+    centroid = centroid.map((c) => c / (coords.length / 4));
+  
+    // Calcula a altura do modelo
+    const currentHeight = maxY - minY;
+  
+    // Fator de escala para ajustar a altura para 50
+    const scale = 50 / currentHeight;
+  
+    // Centraliza e escala os vértices
+    for (let i = 0; i < coords.length; i += 4) {
+      coords[i] = (coords[i] - centroid[0]) * scale; // X
+      coords[i + 1] = (coords[i + 1] - centroid[1]) * scale; // Y
+      coords[i + 2] = (coords[i + 2] - centroid[2]) * scale; // Z
+    }
+  
+    // Define os dados na estrutura da malha
     this.heds.build(coords, indices);
   }  
   

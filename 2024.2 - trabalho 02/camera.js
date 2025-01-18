@@ -1,9 +1,9 @@
 export default class Camera {
   constructor(gl) {
     // Posição da camera
-    this.eye = vec3.fromValues(1.0, 1.0, 1.0);
+    this.eye = vec3.fromValues(0.0, 0.0, 350.0);
     this.at  = vec3.fromValues(0.0, 0.0, 0.0);
-    this.up  = vec3.fromValues(0.0, 1.0, 0.0);
+    this.up  = vec3.fromValues(0.0, 1.0, -1.0);
 
     // Parâmetros da projeção
     this.fovy = Math.PI / 2;
@@ -15,7 +15,7 @@ export default class Camera {
     this.bottom = -2.5;
 
     this.near = 0;
-    this.far = 5;
+    this.far = 10;
 
     // Matrizes View e Projection
     this.view = mat4.create();
