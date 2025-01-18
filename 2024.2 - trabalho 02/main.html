@@ -2,12 +2,27 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>Primeiros Passos</title>
-    <link rel="stylesheet" href="main.css">
+    <title>Two Camera Views</title>
+    <style>
+        canvas {
+            display: block;
+        }
+        button {
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+    </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gl-matrix/2.6.1/gl-matrix-min.js"></script>
 </head>
 
 <body>
+    <button id="toggleCamera">Alternar Câmera</button>
     <canvas id="glcanvas"></canvas>
 </body>
 

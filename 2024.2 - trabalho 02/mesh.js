@@ -40,7 +40,7 @@ export default class Mesh {
   }
   
   async loadMeshV4() {
-    const resp = await fetch('bunny.obj');
+    const resp = await fetch('model1.obj');
     const text = await resp.text();
     console.log("Loaded OBJ file:", text.substring(0, 200)); // Mostra os primeiros 200 caracteres
   

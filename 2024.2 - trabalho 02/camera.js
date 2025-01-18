@@ -1,25 +1,36 @@
 export default class Camera {
-  constructor(gl) {
-    // Posição da camera
-    this.eye = vec3.fromValues(0.0, 0.0, 350.0);
-    this.at  = vec3.fromValues(0.0, 0.0, 0.0);
-    this.up  = vec3.fromValues(0.0, 1.0, -1.0);
+  constructor(gl, type = 'perspective') {
+    // Configurações da câmera perspectiva
+    this.cameraPerspective = {
+      eye: vec3.fromValues(0.0, 0.0, 200.0), // Posição inicial
+      fovy: Math.PI / 2, // Campo de visão
+      aspect: gl.canvas.width / gl.canvas.height, // Razão de aspecto
+      near: 0.1, // Plano de corte próximo
+      far: 1000.0, // Plano de corte distante
+      orbitAngle: 0, // Ângulo para movimento orbital
+    };
 
-    // Parâmetros da projeção
-    this.fovy = Math.PI / 2;
-    this.aspect = gl.canvas.width / gl.canvas.height;
+    // Configurações da câmera ortogonal
+    this.cameraOrthographic = {
+      eye: vec3.fromValues(50.0, 50.0, 50.0), // Posição fixa
+      left: -100, // Limite esquerdo
+      right: 100, // Limite direito
+      top: 100, // Limite superior
+      bottom: -100, // Limite inferior
+      near: 0.1, // Plano de corte próximo
+      far: 1000.0, // Plano de corte distante
+    };
 
-    this.left = -2.5;
-    this.right = 2.5;
-    this.top = 2.5;
-    this.bottom = -2.5;
+    // Parâmetros comuns
+    this.at = vec3.fromValues(0.0, 0.0, 0.0); // Origem
+    this.up = vec3.fromValues(0.0, 1.0, 0.0); // Direção "para cima"
 
-    this.near = 0;
-    this.far = 10;
+    // Matrizes
+    this.view = mat4.create(); // Matriz de visualização
+    this.proj = mat4.create(); // Matriz de projeção
 
-    // Matrizes View e Projection
-    this.view = mat4.create();
-    this.proj = mat4.create();
+    // Tipo inicial de câmera
+    this.type = type;
   }
 
   getView() {
@@ -31,18 +42,43 @@ export default class Camera {
   }
 
   updateViewMatrix() {
-    mat4.identity( this.view );
-    mat4.lookAt(this.view, this.eye, this.at, this.up);
-    // TODO: Tentar implementar as contas diretamente
+    mat4.identity(this.view);
+
+    if (this.type === 'perspective') {
+      const params = this.cameraPerspective;
+
+      // Atualiza a posição orbital
+      const radius = vec3.length(params.eye);
+      const x = radius * Math.cos(params.orbitAngle);
+      const z = radius * Math.sin(params.orbitAngle);
+      params.eye[0] = x;
+      params.eye[2] = z;
+
+      mat4.lookAt(this.view, params.eye, this.at, this.up);
+      params.orbitAngle += 0.01; // Incrementa o ângulo para o movimento orbital
+    } else if (this.type === 'orthographic') {
+      const params = this.cameraOrthographic;
+      mat4.lookAt(this.view, params.eye, this.at, this.up);
+    }
   }
 
-  updateProjectionMatrix(type = '') {
-    mat4.identity( this.proj );
+  updateProjectionMatrix() {
+    mat4.identity(this.proj);
 
-    if (type === 'ortho') {
-      mat4.ortho(this.proj, this.left * 1024/768, this.right * 1024/768, this.bottom , this.top, this.near, this.far);
-    } else {
-      mat4.perspective(this.proj, this.fovy, this.aspect, this.near, this.far);
+    if (this.type === 'perspective') {
+      const params = this.cameraPerspective;
+      mat4.perspective(this.proj, params.fovy, params.aspect, params.near, params.far);
+    } else if (this.type === 'orthographic') {
+      const params = this.cameraOrthographic;
+      mat4.ortho(
+        this.proj,
+        params.left,
+        params.right,
+        params.bottom,
+        params.top,
+        params.near,
+        params.far
+      );
     }
   }
 
@@ -50,29 +86,8 @@ export default class Camera {
     this.updateViewMatrix();
     this.updateProjectionMatrix();
   }
+
+  setType(type) {
+    this.type = type;
+  }
 }
-
-/*
-Construtor (constructor):
-
-Inicializa a câmera com:
-eye: Posição da câmera.
-at: Para onde a câmera está olhando.
-up: Direção "para cima" da câmera.
-Parâmetros de projeção, como fovy (campo de visão), aspect (razão de aspecto), near e far (distâncias de corte).
-Matrizes de view (vista) e proj (projeção) inicializadas.
-
-getView e getProj:
-Retornam, respectivamente, a matriz de visualização e a matriz de projeção.
-
-updateViewMatrix:
-Atualiza a matriz view para refletir a posição da câmera (eye), o alvo (at) e a direção "para cima" (up).
-
-updateProjectionMatrix:
-Atualiza a matriz proj dependendo do tipo:
-ortho: Cria uma projeção ortográfica.
-Padrão: Cria uma projeção perspectiva.
-
-updateCam:
-Atualiza ambas as matrizes view e proj. 
-*/
