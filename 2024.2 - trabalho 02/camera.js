@@ -41,6 +41,14 @@ export default class Camera {
     return this.proj;
   }
 
+  getEye() {
+    if (this.type === 'perspective') {
+      return this.cameraPerspective.eye;
+    } else {
+      return this.cameraOrthographic.eye;
+    }
+  }
+
   updateViewMatrix() {
     mat4.identity(this.view);
 

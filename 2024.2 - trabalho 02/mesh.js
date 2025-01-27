@@ -10,29 +10,30 @@ export default class Mesh {
     this.heds = new HalfEdgeDS(); 
 
     // Matriz de modelagem
-    this.angle = 0; // ângulo de rotação
-    this.delta = delta; // deslocamento
-    this.model = mat4.create(); // Cria a matriz model
+    this.angle = 0;
+    this.delta = delta;
+    this.model = mat4.create();
 
     // Shader program
-    this.vertShd = null; // vertex shader
-    this.fragShd = null; // fragment shader
-    this.program = null; // shader program
+    this.vertShd = null;
+    this.fragShd = null;
+    this.program = null;
 
     // Data location
-    this.vaoLoc = -1; // vertex array object
-    this.indicesLoc = -1; // indices
+    this.vaoLoc = null;
+    this.indicesLoc = null;
 
-    this.uModelLoc = -1; // model matrix
-    this.uViewLoc = -1; // view matrix
-    this.uProjectionLoc = -1; // projection matrix
+    // Uniform locations
+    this.uModelLoc = null;
+    this.uViewLoc = null;
+    this.uProjectionLoc = null;
+    this.uViewPosLoc = null;
 
     // texture
-    this.colorMap = []; // color map
-    this.colorMapLoc = -1; // color map location
-
-    this.texColorMap = -1; // texture color map
-    this.uColorMap = -1; // uniform color map
+    this.colorMap = [];
+    this.colorMapLoc = null;
+    this.texColorMap = null;
+    this.uColorMap = null;
   }
 
   isReady() { // verifica se a malha está pronta
@@ -97,85 +98,162 @@ export default class Mesh {
     this.heds.build(coords, indices);
   }  
   
-  createShader(gl) { // cria o shader
-    this.vertShd = Shader.createShader(gl, gl.VERTEX_SHADER, vertShaderSrc); // cria o vertex shader
-    this.fragShd = Shader.createShader(gl, gl.FRAGMENT_SHADER, fragShaderSrc); // cria o fragment shader
-    this.program = Shader.createProgram(gl, this.vertShd, this.fragShd); // cria o shader program
-
-    gl.useProgram(this.program); // usa o shader program
+  createShader(gl) {
+    console.log("Creating shaders...");
+    try {
+      this.vertShd = Shader.createShader(gl, gl.VERTEX_SHADER, vertShaderSrc);
+      console.log("Vertex shader created");
+      
+      this.fragShd = Shader.createShader(gl, gl.FRAGMENT_SHADER, fragShaderSrc);
+      console.log("Fragment shader created");
+      
+      this.program = Shader.createProgram(gl, this.vertShd, this.fragShd);
+      console.log("Shader program created:", this.program);
+      
+      if (!this.program) {
+        throw new Error("Failed to create shader program");
+      }
+    } catch (error) {
+      console.error("Error creating shaders:", error);
+      throw error;
+    }
   }
 
-  createUniforms(gl) { // cria os uniformes
-    this.uModelLoc = gl.getUniformLocation(this.program, "u_model"); // model matrix
-    this.uViewLoc = gl.getUniformLocation(this.program, "u_view"); // view matrix
-    this.uProjectionLoc = gl.getUniformLocation(this.program, "u_projection"); // projection matrix
-  }
-
-  createVAO(gl) { // cria o vertex array object
-    const vbos = this.heds.getVBOs(); // pega os VBOs
-    console.log(vbos); // imprime os VBOs
-
-    var coordsAttributeLocation = gl.getAttribLocation(this.program, "position"); // pega a posição
-    const coordsBuffer = Shader.createBuffer(gl, gl.ARRAY_BUFFER, new Float32Array(vbos[0])); // cria o buffer
-
-    var scalarsAttributeLocation = gl.getAttribLocation(this.program, "scalar"); // pega o escalar
-    const scalarsBuffer = Shader.createBuffer(gl, gl.ARRAY_BUFFER, new Float32Array(vbos[1])); // cria o buffer
-
-    var normalsAttributeLocation = gl.getAttribLocation(this.program, "normal"); // pega a normal
-    const normalsBuffer = Shader.createBuffer(gl, gl.ARRAY_BUFFER, new Float32Array(vbos[2])); // cria o buffer
-
-    // Create a vertex array object (attribute state)
-    this.vaoLoc = Shader.createVAO(gl,
-      coordsAttributeLocation, coordsBuffer, 
-      scalarsAttributeLocation, scalarsBuffer, 
-      normalsAttributeLocation, normalsBuffer);
-
-    this.indicesLoc = Shader.createBuffer(gl, gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(vbos[3])); // cria o buffer
-  }
-
-  createTex(gl) { // cria a textura
-    this.uColorMap = gl.getUniformLocation(this.program, 'uColorMap'); // pega a textura
-
-    this.texColorMap = gl.createTexture(); // cria a textura
-    gl.bindTexture(gl.TEXTURE_2D, this.texColorMap); // bind the texture so we can work with it
-
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE); // seta o wrap s
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE); // seta o wrap t
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST); // seta o filtro min
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST); // seta o filtro mag
+  createUniforms(gl) {
+    console.log("Creating uniforms...");
   
-    // Upload the image into the texture.
-    const texData = [
-      213,62,79,255,
-      244,109,67,255,
-      253,174,97,255,
-      254,224,139,255,
-      230,245,152,255,
-      171,221,164,255,
-      102,194,165,255,
-      50,136,189,255
-    ].map(d => d / 255);
+    if (!this.program) {
+      console.error("Shader program not initialized");
+      return;
+    }
+  
+    gl.useProgram(this.program);
+  
+    // Matriz de transformação
+    this.uModelLoc = gl.getUniformLocation(this.program, "u_model");
+    this.uViewLoc = gl.getUniformLocation(this.program, "u_view");
+    this.uProjectionLoc = gl.getUniformLocation(this.program, "u_projection");
+  
+    // Posição da câmera
+    this.uViewPosLoc = gl.getUniformLocation(this.program, "viewPos");
+  
+    // Textura
+    this.uColorMap = gl.getUniformLocation(this.program, "uColorMap");
+    gl.uniform1i(this.uColorMap, 0); // Vincula ao unit 0
+  }  
 
-    console.log("=====>", texData); // imprime a textura
+  createVAO(gl) {
+    console.log("Creating VAO...");
+    if (!this.program) {
+      console.error("Shader program not initialized");
+      return;
+    }
 
-    const size = [8, 1]; // tamanho da textura
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, size[0], size[1], 0, gl.RGBA, gl.FLOAT, new Float32Array(texData)); // cria a textura
+    const vbos = this.heds.getVBOs();
+    console.log("VBOs created:", vbos);
 
-    // set which texture units to render with.
-    gl.activeTexture(gl.TEXTURE0); // seta a textura
-    gl.uniform1i(this.uColorMap, gl.TEXTURE0); // seta a textura
+    // Create and bind VAO first
+    this.vaoLoc = gl.createVertexArray();
+    gl.bindVertexArray(this.vaoLoc);
+
+    // Position attribute
+    const coordsAttributeLocation = gl.getAttribLocation(this.program, "position");
+    const coordsBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, coordsBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vbos[0]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(coordsAttributeLocation);
+    gl.vertexAttribPointer(coordsAttributeLocation, 4, gl.FLOAT, false, 0, 0);
+
+    // Normal attribute
+    const normalAttributeLocation = gl.getAttribLocation(this.program, "normal");
+    const normalBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, normalBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vbos[2]), gl.STATIC_DRAW);
+    gl.enableVertexAttribArray(normalAttributeLocation);
+    gl.vertexAttribPointer(normalAttributeLocation, 3, gl.FLOAT, false, 0, 0);
+
+    // Create and bind element buffer
+    this.indicesLoc = gl.createBuffer();
+    gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indicesLoc);
+    gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint32Array(vbos[3]), gl.STATIC_DRAW);
+
+    gl.bindVertexArray(null);
+    console.log("VAO created successfully");
   }
 
-  init(gl, light) { // inicializa a malha
-    this.createShader(gl); // cria o shader
-    this.createUniforms(gl); // cria os uniformes
-    this.createVAO(gl); // cria o vertex array object
-    this.createTex(gl); // cria a textura
+  async init(gl, lights) {
+    console.log("Initializing mesh...");
+    try {
+      await this.loadMeshV4();
+      this.createShader(gl); // Criação do programa
+      this.createUniforms(gl); // Configura uniforms
+      this.createVAO(gl); // Configura buffers e VAO
+  
+      // Configura as luzes no shader
+      if (lights) {
+        lights.forEach((light, index) => {
+          light.createUniforms(gl, this.program, index);
+        });
+      }
+  
+      console.log("Mesh initialization completed successfully");
+    } catch (error) {
+      console.error("Error during mesh initialization:", error);
+      throw error;
+    }
+  }  
 
-    light.createUniforms(gl, this.program); // cria os uniformes da luz
+  draw(gl, cam, lights) {
+    if (!this.program) {
+      console.error("Shader program not initialized");
+      return;
+    }
+
+    if (!this.uModelLoc || !this.uViewLoc || !this.uProjectionLoc) {
+      console.error("Uniform locations not properly initialized", {
+        uModelLoc: this.uModelLoc,
+        uViewLoc: this.uViewLoc,
+        uProjectionLoc: this.uProjectionLoc
+      });
+      return;
+    }
+
+    gl.useProgram(this.program);
+    gl.bindVertexArray(this.vaoLoc);
+
+    // Configurações de renderização
+    gl.frontFace(gl.CCW);
+    gl.enable(gl.CULL_FACE);
+    gl.cullFace(gl.BACK);
+
+    // Atualiza a matriz modelo
+    this.updateModelMatrix();
+
+    // Envia as matrizes para o shader
+    gl.uniformMatrix4fv(this.uModelLoc, false, this.model);
+    gl.uniformMatrix4fv(this.uViewLoc, false, cam.getView());
+    gl.uniformMatrix4fv(this.uProjectionLoc, false, cam.getProj());
+
+    // Atualiza a posição da câmera
+    if (this.uViewPosLoc) {
+      const eye = cam.eye;
+      gl.uniform3f(this.uViewPosLoc, eye[0], eye[1], eye[2]);
+    }
+
+    // Atualiza as luzes
+    if (lights) {
+      lights.forEach((light, index) => {
+        light.createUniforms(gl, this.program, index);
+      });
+    }
+
+    // Desenha
+    gl.drawElements(gl.TRIANGLES, this.heds.faces.length * 3, gl.UNSIGNED_INT, 0);
+
+    // Limpa estado
+    gl.disable(gl.CULL_FACE);
+    gl.bindVertexArray(null);
   }
-
   updateModelMatrix() { // atualiza a matriz model
     this.angle += 0.005; // incrementa o ângulo
 
@@ -197,66 +275,56 @@ export default class Mesh {
     // [5 0 0 0, 0 5 0 0, 0 0 5 0, 0 0 0 1] * this.mat 
   }
 
-  draw(gl, cam, light) {
-    // faces orientadas no sentido anti-horário
+  draw(gl, cam, lights) {
+    if (!this.program) {
+      console.error("Shader program not initialized");
+      return;
+    }
+  
+    // Habilitar face culling (evita renderizar faces traseiras)
     gl.frontFace(gl.CCW);
-
-    // face culling
     gl.enable(gl.CULL_FACE);
     gl.cullFace(gl.BACK);
-
-    // updates the model transformations
+  
+    // Atualiza as transformações da matriz de modelo
     this.updateModelMatrix();
-
-    const model = this.model; // model matrix
-    const view = cam.getView(); // view matrix
-    const proj = cam.getProj(); // projection matrix
-
-    gl.useProgram(this.program); // usa o shader program
-    gl.uniformMatrix4fv(this.uModelLoc, false, model); // envia a matriz model para o shader
-    gl.uniformMatrix4fv(this.uViewLoc, false, view); // envia a matriz view para o shader
-    gl.uniformMatrix4fv(this.uProjectionLoc, false, proj); // envia a matriz projection para o shader
-
-    gl.drawElements(gl.TRIANGLES, this.heds.faces.length * 3, gl.UNSIGNED_INT, 0); // desenha os elementos
-
-    gl.disable(gl.CULL_FACE); // desabilita o cull face
-  }
+  
+    const model = this.model; // matriz model
+    const view = cam.getView(); // matriz view
+    const proj = cam.getProj(); // matriz projection
+  
+    gl.useProgram(this.program); // Ativa o shader program
+  
+    // Envia as matrizes para o shader
+    gl.uniformMatrix4fv(this.uModelLoc, false, model);
+    gl.uniformMatrix4fv(this.uViewLoc, false, view);
+    gl.uniformMatrix4fv(this.uProjectionLoc, false, proj);
+  
+    // Envia a posição da câmera
+    if (this.uViewPosLoc) {
+      const eye = cam.getEye();
+      gl.uniform3f(this.uViewPosLoc, eye[0], eye[1], eye[2]);
+    }
+  
+    // Atualiza as luzes no shader
+    if (lights && Array.isArray(lights)) {
+      lights.forEach((light, index) => {
+        light.createUniforms(gl, this.program, index);
+      });
+    }
+  
+    // Ativa e configura a textura
+    gl.activeTexture(gl.TEXTURE0); // Unidade de textura 0
+    gl.bindTexture(gl.TEXTURE_2D, this.texColorMap); // Vincula a textura
+    gl.uniform1i(this.uColorMap, 0); // Vincula ao uniform no shader
+  
+    // Desenha os elementos
+    gl.bindVertexArray(this.vaoLoc); // Vincula o VAO
+    gl.drawElements(gl.TRIANGLES, this.heds.faces.length * 3, gl.UNSIGNED_INT, 0);
+  
+    // Limpa o estado
+    gl.bindVertexArray(null);
+    gl.useProgram(null);
+    gl.disable(gl.CULL_FACE); // Desabilita o face culling
+  }  
 }
-
-/* 
-Construtor (constructor):
-
-Define:
-Estrutura de dados heds (Half-Edge Data Structure) para modelagem de malhas.
-Matriz model para transformação do modelo.
-Shaders (vertShd e fragShd) e programa GLSL (program).
-Variáveis relacionadas à textura e buffers.
-isReady:
-
-Verifica se a estrutura da malha está pronta.
-loadMeshV4:
-
-Lê dados de um arquivo .obj, extrai vértices e índices e os constrói na estrutura heds.
-createShader:
-
-Compila e cria o programa de shaders para o modelo.
-createUniforms:
-
-Configura os locais dos uniformes usados nos shaders (matrizes de transformação).
-createVAO:
-
-Configura buffers de vértices (vbos), normais e índices para renderização.
-createTex:
-
-Cria uma textura baseada em dados RGBA definidos e a carrega no GPU.
-init:
-
-Inicializa os shaders, uniformes, buffers e textura.
-updateModelMatrix:
-
-Atualiza a matriz de transformação do modelo aplicando translações, rotações e escalas.
-draw:
-
-Configura as propriedades de renderização (como culling).
-Atualiza a matriz do modelo e renderiza o objeto com drawElements.
- */

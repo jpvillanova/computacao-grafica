@@ -4,36 +4,42 @@ import Mesh from './mesh.js';
 
 class Scene {
   constructor(gl) {
-    // Inicializa a câmera
     this.cam = new Camera(gl);
 
-    // Configurações de luz
-    this.light = new Light();
+    // Create two lights with different positions and colors
+    this.lights = [
+      new Light(
+        vec4.fromValues(-100.0, 100.0, 0.0, 1.0),  // White light position
+        vec4.fromValues(1.0, 1.0, 1.0, 1.0)        // White color
+      ),
+      new Light(
+        vec4.fromValues(100.0, 100.0, 0.0, 1.0),   // Yellow light position
+        vec4.fromValues(1.0, 1.0, 0.0, 1.0)        // Yellow color
+      )
+    ];
 
-    // Objetos da cena
     this.mesh = new Mesh(1.0);
     this.copy = new Mesh(-1.0);
   }
 
   async init(gl) {
     await this.mesh.loadMeshV4();
-    this.mesh.init(gl, this.light);
+    this.mesh.init(gl, this.lights);
 
     await this.copy.loadMeshV4();
-    this.copy.init(gl, this.light);
+    this.copy.init(gl, this.lights);
   }
 
   draw(gl) {
-    this.cam.updateCam(); // Atualiza a câmera ativa
-    this.light.updateLight();
+    this.cam.updateCam();
 
-    // Renderiza os objetos
-    this.mesh.draw(gl, this.cam, this.light);
-    this.copy.draw(gl, this.cam, this.light);
+    this.mesh.init(gl, this.lights); // Inicializa a malha
+    
+    this.mesh.draw(gl, this.cam, this.lights);
+    this.copy.draw(gl, this.cam, this.lights);
   }
 
   toggleCamera() {
-    // Alterna entre perspectiva e ortogonal
     this.cam.setType(this.cam.type === 'perspective' ? 'orthographic' : 'perspective');
     console.log(`Câmera alterada para: ${this.cam.type}`);
   }
