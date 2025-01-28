@@ -9,14 +9,26 @@ class Scene {
     // Create two lights with different positions and colors
     this.lights = [
       new Light(
-        vec4.fromValues(-100.0, 100.0, 0.0, 1.0),  // White light position
-        vec4.fromValues(1.0, 1.0, 1.0, 1.0)        // White color
+        vec4.fromValues(-100.0, 100.0, 0.0),  // White light position
+        vec4.fromValues(1.0, 1.0, 1.0, 1.0)   // White color
       ),
       new Light(
-        vec4.fromValues(100.0, 100.0, 0.0, 1.0),   // Yellow light position
-        vec4.fromValues(1.0, 1.0, 0.0, 1.0)        // Yellow color
+        vec4.fromValues(100.0, 100.0, 0.0),   // Yellow light position
+        vec4.fromValues(1.0, 1.0, 0.0, 1.0)   // Yellow color
       )
     ];
+
+    // Adjust intensities for the lights
+    // White Light
+    this.lights[0].amb_k = 0.5;  // Ambient intensity
+    this.lights[0].dif_k = 0.5;  // Diffuse intensity
+    this.lights[0].esp_k = 0.3;  // Specular intensity
+
+    // Yellow Light
+    this.lights[1].amb_k = 0.3;  // Ambient intensity
+    this.lights[1].dif_k = 0.5;  // Diffuse intensity
+    this.lights[1].esp_k = 0.7;  // Specular intensity
+    this.lights[1].esp_p = 1.0; // Sharper specular highlights
 
     this.mesh = new Mesh(1.0);
     this.copy = new Mesh(-1.0);
