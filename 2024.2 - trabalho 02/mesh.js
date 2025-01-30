@@ -70,6 +70,7 @@ export default class Mesh {
         maxY = Math.max(maxY, y);
   
         coords.push(x, y, z, 1.0);
+
       } else if (parts[0] === 'f') {
         parts.slice(1).forEach((face) => {
           const vertexIndex = face.split('/')[0];
@@ -202,7 +203,26 @@ export default class Mesh {
       throw error;
     }
   }  
+  updateModelMatrix() { // atualiza a matriz model
+    this.angle += 0.005; // incrementa o ângulo
 
+    mat4.identity( this.model ); // Zera a matriz model
+    mat4.translate(this.model, this.model, [this.delta, 0, 0]); 
+    // [1 0 0 delta, 0 1 0 0, 0 0 1 0, 0 0 0 1] * this.mat 
+
+    mat4.rotateY(this.model, this.model, this.angle);
+    // [ cos(this.angle) 0 -sin(this.angle) 0, 
+    //         0         1        0         0, 
+    //   sin(this.angle) 0  cos(this.angle) 0, 
+    //         0         0        0         1]
+    // * this.mat 
+
+    mat4.translate(this.model, this.model, [-0.25, -0.25, -0.25]);
+    // [1 0 0 -0.5, 0 1 0 -0.5, 0 0 1 -0.5, 0 0 0 1] * this.mat 
+
+    mat4.scale(this.model, this.model, [5, 5, 5]);
+    // [5 0 0 0, 0 5 0 0, 0 0 5 0, 0 0 0 1] * this.mat 
+  } 
   draw(gl, cam, lights) {
     if (!this.program) {
       console.error("Shader program not initialized");
@@ -236,95 +256,28 @@ export default class Mesh {
 
     // Atualiza a posição da câmera
     if (this.uViewPosLoc) {
-      const eye = cam.eye;
+      const eye = cam.getEye ? cam.getEye() : cam.eye;
       gl.uniform3f(this.uViewPosLoc, eye[0], eye[1], eye[2]);
     }
 
     // Atualiza as luzes
-    if (lights) {
-      lights.forEach((light, index) => {
-        light.createUniforms(gl, this.program, index);
-      });
-    }
-
-    // Desenha
-    gl.drawElements(gl.TRIANGLES, this.heds.faces.length * 3, gl.UNSIGNED_INT, 0);
-
-    // Limpa estado
-    gl.disable(gl.CULL_FACE);
-    gl.bindVertexArray(null);
-  }
-  updateModelMatrix() { // atualiza a matriz model
-    this.angle += 0.005; // incrementa o ângulo
-
-    mat4.identity( this.model ); // Zera a matriz model
-    mat4.translate(this.model, this.model, [this.delta, 0, 0]); 
-    // [1 0 0 delta, 0 1 0 0, 0 0 1 0, 0 0 0 1] * this.mat 
-
-    mat4.rotateY(this.model, this.model, this.angle);
-    // [ cos(this.angle) 0 -sin(this.angle) 0, 
-    //         0         1        0         0, 
-    //   sin(this.angle) 0  cos(this.angle) 0, 
-    //         0         0        0         1]
-    // * this.mat 
-
-    mat4.translate(this.model, this.model, [-0.25, -0.25, -0.25]);
-    // [1 0 0 -0.5, 0 1 0 -0.5, 0 0 1 -0.5, 0 0 0 1] * this.mat 
-
-    mat4.scale(this.model, this.model, [5, 5, 5]);
-    // [5 0 0 0, 0 5 0 0, 0 0 5 0, 0 0 0 1] * this.mat 
-  }
-
-  draw(gl, cam, lights) {
-    if (!this.program) {
-      console.error("Shader program not initialized");
-      return;
-    }
-  
-    // Habilitar face culling (evita renderizar faces traseiras)
-    gl.frontFace(gl.CCW);
-    gl.enable(gl.CULL_FACE);
-    gl.cullFace(gl.BACK);
-  
-    // Atualiza as transformações da matriz de modelo
-    this.updateModelMatrix();
-  
-    const model = this.model; // matriz model
-    const view = cam.getView(); // matriz view
-    const proj = cam.getProj(); // matriz projection
-  
-    gl.useProgram(this.program); // Ativa o shader program
-  
-    // Envia as matrizes para o shader
-    gl.uniformMatrix4fv(this.uModelLoc, false, model);
-    gl.uniformMatrix4fv(this.uViewLoc, false, view);
-    gl.uniformMatrix4fv(this.uProjectionLoc, false, proj);
-  
-    // Envia a posição da câmera
-    if (this.uViewPosLoc) {
-      const eye = cam.getEye();
-      gl.uniform3f(this.uViewPosLoc, eye[0], eye[1], eye[2]);
-    }
-  
-    // Atualiza as luzes no shader
     if (lights && Array.isArray(lights)) {
       lights.forEach((light, index) => {
         light.createUniforms(gl, this.program, index);
       });
     }
-  
+
     // Ativa e configura a textura
-    gl.activeTexture(gl.TEXTURE0); // Unidade de textura 0
-    gl.bindTexture(gl.TEXTURE_2D, this.texColorMap); // Vincula a textura
-    gl.uniform1i(this.uColorMap, 0); // Vincula ao uniform no shader
-  
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.texColorMap);
+    gl.uniform1i(this.uColorMap, 0);
+
     // Desenha os elementos
-    gl.bindVertexArray(this.vaoLoc); // Vincula o VAO
     gl.drawElements(gl.TRIANGLES, this.heds.faces.length * 3, gl.UNSIGNED_INT, 0);
-  
-    // Limpa o estado
+
+    // Limpa estado
+    gl.disable(gl.CULL_FACE);
     gl.bindVertexArray(null);
     gl.useProgram(null);
-    gl.disable(gl.CULL_FACE); // Desabilita o face culling
-  }  
+  }
 }

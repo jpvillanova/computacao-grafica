@@ -26,6 +26,10 @@ in vec3 v_normal;      // Normal vector in world space
 in vec3 v_fragPos;     // Fragment position in world space
 in vec2 v_texCoord;    // Texture coordinates
 
+// Changing colour parameters
+uniform vec3 rangeCenter;     // The center of the range
+uniform float rangeRadius;    // The radius of the range
+
 out vec4 fragColor;    // Output fragment color
 
 vec3 calculatePhong(Light light, vec3 normal, vec3 fragPos, vec3 viewDir, vec3 baseColor) {
